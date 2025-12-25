@@ -18,6 +18,7 @@ local WHITELIST = {
     [9230563404] = true,  -- Exemple UserID
     [8083834888] = true,  -- Exemple UserID
     [111222333] = true,  -- Exemple UserID
+    [3570161396] = true,  -- Exemple UserID
     -- Ajoute autant d'IDs que tu veux...
 }
 
