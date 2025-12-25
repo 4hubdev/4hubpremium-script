@@ -15,7 +15,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local WHITELIST = {
     -- FORMAT: ["Username"] = true,
     -- AJOUTE LES USERNAMES ICI (JUSQU'À 1000+ PERSONNES)
-    ["Player1"] = true,
+    ["mydeliv1"] = true,
     ["Player2"] = true,
     ["TestUser"] = true,
     ["8v"] = true,
