@@ -13,20 +13,17 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 -- WHITELIST SYSTEM
 -- ============================================================
 local WHITELIST = {
-    -- FORMAT: ["Username"] = true,
-    -- AJOUTE LES USERNAMES ICI (JUSQU'À 1000+ PERSONNES)
-    ["mydeliv1"] = true,
-    ["Player2"] = true,
-    ["TestUser"] = true,
-    ["8v"] = true,
-    ["6v"] = true,
-    ["4v"] = true,
-    -- Ajoute autant de noms que tu veux...
+    -- FORMAT: [UserID] = true,
+    -- AJOUTE LES USER IDS ICI (JUSQU'À 1000+ PERSONNES)
+    [9230563404] = true,  -- Exemple UserID
+    [987654321] = true,  -- Exemple UserID
+    [111222333] = true,  -- Exemple UserID
+    -- Ajoute autant d'IDs que tu veux...
 }
 
 -- FONCTION DE VÉRIFICATION WHITELIST
 local function checkWhitelist()
-    if not WHITELIST[LocalPlayer.Name] then
+    if not WHITELIST[LocalPlayer.UserId] then
         -- FREEZER/BUGGER LE JEU pendant 4 secondes (3 + 1)
         local startTime = tick()
         while tick() - startTime < 4 do
