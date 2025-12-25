@@ -1,5 +1,5 @@
 -- ============================================================
--- 4xvs - INTERFACE COMPLÈTE AVEC CATÉGORIES À GAUCHE
+-- Vhub - INTERFACE COMPLÈTE AVEC WHITELIST & DRAG SYSTEM
 -- ============================================================
 
 local Players = game:GetService("Players")
@@ -8,6 +8,45 @@ local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ============================================================
+-- WHITELIST SYSTEM
+-- ============================================================
+local WHITELIST = {
+    -- FORMAT: ["Username"] = true,
+    -- AJOUTE LES USERNAMES ICI (JUSQU'À 1000+ PERSONNES)
+    ["Player1"] = true,
+    ["Player2"] = true,
+    ["TestUser"] = true,
+    ["8v"] = true,
+    ["6v"] = true,
+    ["4v"] = true,
+    -- Ajoute autant de noms que tu veux...
+}
+
+-- FONCTION DE VÉRIFICATION WHITELIST
+local function checkWhitelist()
+    if not WHITELIST[LocalPlayer.Name] then
+        -- FREEZER/BUGGER LE JEU pendant 4 secondes (3 + 1)
+        local startTime = tick()
+        while tick() - startTime < 4 do
+            -- Boucle intensive pour freezer le jeu
+            for i = 1, 100000 do
+                local x = math.sqrt(i) * math.random()
+            end
+        end
+        
+        -- Kick le joueur après 4 secondes
+        LocalPlayer:Kick("Vous n'êtes pas whitelist")
+        return false
+    end
+    return true
+end
+
+-- VÉRIFIER LA WHITELIST AU DÉMARRAGE
+if not checkWhitelist() then
+    return -- Arrête le script si pas whitelist
+end
 
 -- ============================================================
 -- CONFIGURATION
@@ -33,10 +72,7 @@ local CONFIG = {
         {emoji = "⚡", name = "Nameless", url = "https://raw.githubusercontent.com/ily123950/Vulkan/refs/heads/main/Tr"},
         {emoji = "💻", name = "Admin Panel", url = "https://pastefy.app/PwlxhXHs/raw"},
         {emoji = "🔒", name = "Allow Friends", url = "https://pastebin.com/raw/aipXbhpf"},
-        {emoji = "🔪", name = "PVP", url = "https://raw.githubusercontent.com/xspeedHub0/Zlhub/main/ZLPVPreview.lua"},
         {emoji = "⚡", name = "Speed Boost", url = "https://raw.githubusercontent.com/Tigyiscute/tigystealabrainrotscript/refs/heads/main/TigyHelper"},
-        {emoji = "🧍🏿‍♂️", name = "No Animation", url = "https://raw.githubusercontent.com/403k/UnwalkAnimation/refs/heads/main/GhostWalk"},
-        {emoji = "🍋", name = "Lemon Hub", url = "https://api.luarmor.net/files/v3/loaders/c4281c3937ebd537cb9e860182e41141.lua"},
     }
 }
 
@@ -58,6 +94,50 @@ local State = {
     currentCategory = "Misc",
     loadedScripts = {},
 }
+
+-- ============================================================
+-- SYSTÈME DE DRAG (DÉPLACEMENT)
+-- ============================================================
+local function makeDraggable(frame)
+    local dragging = false
+    local dragInput, dragStart, startPos
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+    
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
 
 -- ============================================================
 -- FONCTIONS UTILITAIRES
@@ -285,22 +365,39 @@ local function createCategorizedGUI()
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = PlayerGui
     
+    -- BOUTON RÉOUVERTURE (DRAGGABLE)
     local reopenBtn = Instance.new("TextButton")
     reopenBtn.Name = "ReopenButton"
     reopenBtn.Size = UDim2.new(0, 50, 0, 50)
     reopenBtn.Position = UDim2.new(1, -60, 0, 10)
     reopenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    reopenBtn.Text = "4x"
+    reopenBtn.Text = "Vhub"
     reopenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     reopenBtn.Font = Enum.Font.GothamBold
-    reopenBtn.TextSize = 22
+    reopenBtn.TextSize = 14
     reopenBtn.Visible = false
+    reopenBtn.Active = true
+    reopenBtn.Draggable = false -- On utilise notre propre système
     reopenBtn.Parent = gui
     Instance.new("UICorner", reopenBtn).CornerRadius = UDim.new(0, 8)
     local reopenStroke = Instance.new("UIStroke", reopenBtn)
     reopenStroke.Color = Color3.fromRGB(0, 80, 180)
     reopenStroke.Thickness = 3
     
+    -- ANIMATION RAINBOW POUR LE CONTOUR
+    task.spawn(function()
+        local hue = 0
+        while true do
+            hue = (hue + 1) % 360
+            reopenStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
+            task.wait(0.01) -- Change toutes les 0.01 secondes pour effet fluide
+        end
+    end)
+    
+    -- RENDRE LE BOUTON RÉOUVERTURE DRAGGABLE
+    makeDraggable(reopenBtn)
+    
+    -- FRAME PRINCIPALE (DRAGGABLE)
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
     mainFrame.Size = UDim2.new(0, 550, 0, 450)
@@ -315,21 +412,46 @@ local function createCategorizedGUI()
     mainStroke.Color = Color3.fromRGB(0, 80, 180)
     mainStroke.Thickness = 2
     
+    -- ANIMATION RAINBOW POUR LE CONTOUR DE L'INTERFACE PRINCIPALE
+    task.spawn(function()
+        local hue = 0
+        while true do
+            hue = (hue + 1) % 360
+            mainStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
+            task.wait(0.01) -- Change en continu pour effet fluide
+        end
+    end)
+    
+    -- HEADER (ZONE DE DRAG)
     local header = Instance.new("Frame", mainFrame)
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, 60)
     header.BackgroundColor3 = CONFIG.THEME.Background
     header.BorderSizePixel = 0
+    header.Active = true
     local headerStroke = Instance.new("UIStroke", header)
     headerStroke.Color = Color3.fromRGB(0, 80, 180)
     headerStroke.Thickness = 2
     headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     
+    -- ANIMATION RAINBOW POUR LE CONTOUR DU HEADER
+    task.spawn(function()
+        local hue = 0
+        while true do
+            hue = (hue + 1) % 360
+            headerStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
+            task.wait(0.01) -- Synchronisé avec le contour principal
+        end
+    end)
+    
+    -- RENDRE L'INTERFACE PRINCIPALE DRAGGABLE VIA LE HEADER
+    makeDraggable(mainFrame)
+    
     local logo = Instance.new("TextLabel", header)
     logo.Size = UDim2.new(1, -60, 1, 0)
     logo.Position = UDim2.new(0, 20, 0, 0)
     logo.BackgroundTransparency = 1
-    logo.Text = "4xvs"
+    logo.Text = "Vhub"
     logo.TextColor3 = CONFIG.THEME.Text
     logo.Font = Enum.Font.GothamBold
     logo.TextSize = 32
@@ -385,7 +507,7 @@ local function createCategorizedGUI()
     footer.Size = UDim2.new(1, 0, 0, 30)
     footer.Position = UDim2.new(0, 0, 1, -35)
     footer.BackgroundTransparency = 1
-    footer.Text = "by 8v & 4b"
+    footer.Text = "by 8v & 6v & 4v | 🖱️ Glisse pour déplacer"
     footer.TextColor3 = CONFIG.THEME.TextDim
     footer.Font = Enum.Font.Gotham
     footer.TextSize = 12
@@ -574,7 +696,7 @@ local function createCategorizedGUI()
     end)
     
     createLabel(infoContent, "Version: 1.0.0", CONFIG.THEME.TextDim)
-    createLabel(infoContent, "Créé par 8v & 4b", CONFIG.THEME.TextDim)
+    createLabel(infoContent, "Créé par 8v & 6v & 4v", CONFIG.THEME.TextDim)
 end
 
 createCategorizedGUI()
