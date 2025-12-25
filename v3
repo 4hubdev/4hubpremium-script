@@ -16,7 +16,7 @@ local WHITELIST = {
     -- FORMAT: [UserID] = true,
     -- AJOUTE LES USER IDS ICI (JUSQU'À 1000+ PERSONNES)
     [9230563404] = true,  -- Exemple UserID
-    [8083834] = true,  -- Exemple UserID
+    [8083834888] = true,  -- Exemple UserID
     [111222333] = true,  -- Exemple UserID
     -- Ajoute autant d'IDs que tu veux...
 }
