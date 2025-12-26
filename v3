@@ -334,15 +334,7 @@ local function createGUI()
     Instance.new("UICorner", reopenBtn).CornerRadius = UDim.new(0, 10)
     local reopenStroke = Instance.new("UIStroke", reopenBtn)
     reopenStroke.Color = Color3.fromRGB(138, 43, 226)
-    reopenStroke.Thickness = 3
-    task.spawn(function()
-        local hue = 270
-        while true do
-            hue = ((hue + 2) % 360)
-            reopenStroke.Color = Color3.fromHSV(hue / 360, 0.8, 1)
-            task.wait(0.03)
-        end
-    end)
+    reopenStroke.Thickness = 2
     makeDraggable(reopenBtn)
     
     -- Frame principale (PLUS PETITE)
@@ -358,14 +350,6 @@ local function createGUI()
     local mainStroke = Instance.new("UIStroke", main)
     mainStroke.Color = Color3.fromRGB(138, 43, 226)
     mainStroke.Thickness = 2
-    task.spawn(function()
-        local hue = 270
-        while true do
-            hue = ((hue + 2) % 360)
-            mainStroke.Color = Color3.fromHSV(hue / 360, 0.8, 1)
-            task.wait(0.03)
-        end
-    end)
     
     -- Header
     local header = Instance.new("Frame", main)
@@ -373,6 +357,7 @@ local function createGUI()
     header.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
     header.BorderSizePixel = 0
     header.Active = true
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 12)
     local headerStroke = Instance.new("UIStroke", header)
     headerStroke.Color = Color3.fromRGB(138, 43, 226)
     headerStroke.Thickness = 2
