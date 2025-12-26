@@ -551,31 +551,6 @@ local function createGUI()
         i.TextColor3 = State.streamProofEnabled and CONFIG.THEME.Success or CONFIG.THEME.TextDim
     end)
     
-    btn(miscTab, "⚡ Nameless", function(b, i)
-        i.Text = "⏳"
-        i.TextColor3 = CONFIG.THEME.Accent
-        b.Text = "⚡ Nameless - Chargement..."
-        local success = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/ily123950/Vulkan/refs/heads/main/Tr"))()
-        end)
-        if success then
-            i.Text = "✓"
-            i.TextColor3 = CONFIG.THEME.Success
-            b.Text = "⚡ Nameless - Chargé!"
-            task.wait(2)
-            b.Text = "⚡ Nameless"
-            i.Text = "●"
-            i.TextColor3 = CONFIG.THEME.Success
-        else
-            i.Text = "✕"
-            i.TextColor3 = CONFIG.THEME.Error
-            b.Text = "⚡ Nameless - Erreur"
-            task.wait(2)
-            b.Text = "⚡ Nameless"
-            i.Text = "○"
-        end
-    end)
-    
     btn(espTab, "ESP", function(b, i)
         State.espEnabled = not State.espEnabled
         toggleESP(State.espEnabled)
