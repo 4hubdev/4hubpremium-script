@@ -73,9 +73,7 @@ local CONFIG = {
     PREMIUM_SCRIPTS = {
         {emoji = "🚫", name = "Auto-Block", url = "https://raw.githubusercontent.com/sabscripts063-cloud/Kdml-Not-Me/refs/heads/main/BlockPlayer"},
         {emoji = "⚡", name = "Nameless", url = "https://raw.githubusercontent.com/ily123950/Vulkan/refs/heads/main/Tr"},
-        {emoji = "💻", name = "Admin Panel", url = "https://pastefy.app/PwlxhXHs/raw"},
         {emoji = "🔒", name = "Allow Friends", url = "https://pastebin.com/raw/aipXbhpf"},
-        {emoji = "⚡", name = "Speed Boost", url = "https://raw.githubusercontent.com/Tigyiscute/tigystealabrainrotscript/refs/heads/main/TigyHelper"},
     }
 }
 
@@ -551,6 +549,31 @@ local function createGUI()
         toggleStreamProof(State.streamProofEnabled)
         i.Text = State.streamProofEnabled and "●" or "○"
         i.TextColor3 = State.streamProofEnabled and CONFIG.THEME.Success or CONFIG.THEME.TextDim
+    end)
+    
+    btn(miscTab, "⚡ Nameless", function(b, i)
+        i.Text = "⏳"
+        i.TextColor3 = CONFIG.THEME.Accent
+        b.Text = "⚡ Nameless - Chargement..."
+        local success = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/ily123950/Vulkan/refs/heads/main/Tr"))()
+        end)
+        if success then
+            i.Text = "✓"
+            i.TextColor3 = CONFIG.THEME.Success
+            b.Text = "⚡ Nameless - Chargé!"
+            task.wait(2)
+            b.Text = "⚡ Nameless"
+            i.Text = "●"
+            i.TextColor3 = CONFIG.THEME.Success
+        else
+            i.Text = "✕"
+            i.TextColor3 = CONFIG.THEME.Error
+            b.Text = "⚡ Nameless - Erreur"
+            task.wait(2)
+            b.Text = "⚡ Nameless"
+            i.Text = "○"
+        end
     end)
     
     btn(espTab, "ESP", function(b, i)
